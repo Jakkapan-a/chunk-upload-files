@@ -5,13 +5,12 @@ import fs from 'fs-extra';
 import cors from 'cors';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-
 import checkAllChunksUploaded from './Helpers/checkAllChunksUploaded';
 import combineChunks from './Helpers/combineChunks';
-const crypto = require('crypto');
 
-const HOST = '127.0.0.1';
-const PORT = 3000;
+const crypto = require('crypto');
+const HOST = process.env.HOST || '127.0.0.1';
+const PORT = Number(process.env.PORT) || 3000;
 // core options
 const optionsCors:cors.CorsOptions ={
   origin: ['*'],
@@ -29,14 +28,9 @@ const ioOptionsCors = {
 }
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer,ioOptionsCors);
-
-app.use(cors());
-// const uploadDir = 'uploads';
-// const binDir = 'bin';
-// const chunkDir = path.join(uploadDir, 'chunks');
+app.use(cors(optionsCors));
 
 const upload = multer({ dest: 'chunks/' }); // 
-
 fs.ensureDirSync('chunks');
 fs.ensureDirSync('bin');
 
@@ -47,17 +41,15 @@ io.on('connection', (socket) => {
   });
 });
 
-
 app.get('/', (req: Request, res: Response) => {
   res.json({ status: true , message: 'Server is running' });
 });
+
 app.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
  if (!req.file) {
     return res.status(400).send('No file uploaded.');
   }
-  // Extract payload from Resumable.js
   const { resumableChunkNumber, resumableTotalChunks, resumableFilename, _token: token, _key } = req.body;
-  // const key = crypto.createHash('md5').update(_key).digest('hex');
   const chunkFilename = path.join('chunks', `${_key}_${resumableFilename}-${resumableChunkNumber}`);
   const fileIdentifier = `${_key}_${resumableFilename}-${resumableChunkNumber}`;
   // Move chunk to the final destination
@@ -77,12 +69,8 @@ app.post('/upload', upload.single('file'), async (req: Request, res: Response) =
   }
   res.json({ done: Number(resumableChunkNumber) / Number(resumableTotalChunks), status: true });
   });
-
-
 httpServer.listen(PORT, HOST, () => {
     console.log(`Server is running at http://${HOST}:${PORT}`);
 });
 
 // ---------------------------------------------------------- //
-
- 

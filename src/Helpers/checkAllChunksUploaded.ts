@@ -4,7 +4,6 @@ const checkAllChunksUploaded = async (chunksDir: string, fileName: string, total
         const files = await fs.readdir(chunksDir);
         const chunkFileName = fileName.split('.bin-').shift()+'.bin';
         const chunks = files.filter((file) => file.includes(chunkFileName));
-
         if (chunks.length > 0 && chunks.length == totalChunks)
         {
           return true;

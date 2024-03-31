@@ -26,12 +26,9 @@ import fs from 'fs-extra';
           const filePath = path.join(chunksDir, file);
           if(!fs.existsSync(filePath)) return;
           const stats = await fs.stat(filePath);
-          console.log('stats:', stats);
-          
           const now = new Date().getTime();
           const createTime = stats.birthtime.getTime();
           const diff = now - createTime;
-
           console.log('File:', file, 'createTime:', createTime, 'now:', now, 'diff:', diff);
           // convert to minutes
           const minutes = Math.floor(diff / 60000);
