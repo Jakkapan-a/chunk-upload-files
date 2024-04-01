@@ -7,6 +7,7 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import checkAllChunksUploaded from './Helpers/checkAllChunksUploaded';
 import combineChunks from './Helpers/combineChunks';
+import validateFiles from './Middleware/validateFiles';
 
 const crypto = require('crypto');
 const HOST = process.env.HOST || '127.0.0.1';
@@ -28,7 +29,7 @@ const ioOptionsCors = {
 }
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer,ioOptionsCors);
-app.use(cors(optionsCors));
+app.use(cors());
 
 const upload = multer({ dest: 'chunks/' }); // 
 fs.ensureDirSync('chunks');
@@ -45,11 +46,12 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ status: true , message: 'Server is running' });
 });
 
-app.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
+app.post('/upload', upload.single('file'),validateFiles, async (req: Request, res: Response) => {
  if (!req.file) {
     return res.status(400).send('No file uploaded.');
   }
   const { resumableChunkNumber, resumableTotalChunks, resumableFilename, _token: token, _key } = req.body;
+
   const chunkFilename = path.join('chunks', `${_key}_${resumableFilename}-${resumableChunkNumber}`);
   const fileIdentifier = `${_key}_${resumableFilename}-${resumableChunkNumber}`;
   // Move chunk to the final destination
@@ -57,8 +59,6 @@ app.post('/upload', upload.single('file'), async (req: Request, res: Response) =
   await fs.move(req.file.path, chunkFilename, { overwrite: true });
   // Check if all chunks are uploaded
   const chunksUploaded = await checkAllChunksUploaded('chunks', fileIdentifier, resumableTotalChunks);
-  
-  
   if (chunksUploaded) {
     const finalFilename = path.join('bin', `${_key}_${resumableFilename}`).replace('\\', '/');
     // Combine all chunks into one file
@@ -69,8 +69,13 @@ app.post('/upload', upload.single('file'), async (req: Request, res: Response) =
   }
   res.json({ done: Number(resumableChunkNumber) / Number(resumableTotalChunks), status: true });
   });
+
+  /** Not found 404 */
+app.use((req: Request, res: Response) => {
+  res.status(404).send('404: Page not Found');
+});
+
 httpServer.listen(PORT, HOST, () => {
     console.log(`Server is running at http://${HOST}:${PORT}`);
 });
-
 // ---------------------------------------------------------- //
