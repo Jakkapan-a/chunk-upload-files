@@ -34,7 +34,7 @@ import fs from 'fs-extra';
           const minutes = Math.floor(diff / 60000);
           console.log('Minutes:', minutes);
 
-          if (minutes > 10) {
+          if (minutes > 60) {
               console.log('Remove file:', file);
               await fs.remove(filePath);
           }         
