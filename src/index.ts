@@ -9,7 +9,7 @@ import checkAllChunksUploaded from './Helpers/checkAllChunksUploaded';
 import combineChunks from './Helpers/combineChunks';
 import validateFiles from './Middleware/validateFiles';
 
-const crypto = require('crypto');
+// const crypto = require('crypto');
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT) || 3000;
 // core options
@@ -75,7 +75,7 @@ app.use((req: Request, res: Response) => {
   res.status(404).send('404: Page not Found');
 });
 
-httpServer.listen(PORT, HOST, () => {
-    console.log(`Server is running at http://${HOST}:${PORT}`);
+httpServer.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}`);
 });
 // ---------------------------------------------------------- //
